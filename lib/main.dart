@@ -36,11 +36,31 @@ Future<void> initializeDatabase() async {
       'email': 'jane@example.com',
       'preferences': 'Default preferences',
     });
+    await dbHelper.insertUser({
+      'id': '125',
+      'name': 'Jd Doe',
+      'email': 'jane@example.com',
+      'preferences': 'Default preferences',
+    });
+    await dbHelper.insertUser({
+      'id': '126',
+      'name': 'Jass Doe',
+      'email': 'jane@example.com',
+      'preferences': 'Default preferences',
+    });
     await dbHelper.insertFriend({
       'userId': '123', // The ID of the current user
       'friendId': '124', // The ID of the friend
     });
     // Add events for user and friend
+    await dbHelper.insertEvent({
+      'id': '1',
+      'name': 'John\'s Birthday Party',
+      'date': DateTime.now().toIso8601String(),
+      'location': 'Venue 1',
+      'description': 'John\'s celebration event',
+      'userId': '123',
+    });
     await dbHelper.insertEvent({
       'id': '1',
       'name': 'John\'s Birthday Party',
