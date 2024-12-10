@@ -1,87 +1,46 @@
 import 'package:flutter/material.dart';
-import 'Model/Gift.dart'; // Import the Gift model
-import 'Model/Event.dart'; // Import the Event model
-import 'Model/User.dart'; // Import the User model
+import 'sqlite/database_helper.dart';
+import 'Model/Gift.dart';
 
-class GiftListPage extends StatefulWidget {
-  final Event event; // Receive the event whose gifts you want to display
-  final User user; // Receive the user to update pledgedGifts
+class GiftListPage extends StatelessWidget {
+  final String eventId;
 
-  GiftListPage({required this.event, required this.user});
+  const GiftListPage({Key? key, required this.eventId}) : super(key: key);
 
-  @override
-  _GiftListPageState createState() => _GiftListPageState();
-}
+  Future<List<Gift>> _fetchGifts() async {
+    final dbHelper = DatabaseHelper();
+    final giftsData = await dbHelper.fetchGifts(eventId);
+    return giftsData.map((gift) => Gift.fromMap(gift)).toList();
+  }
 
-class _GiftListPageState extends State<GiftListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Gifts for ${widget.event.name}"),
-      ),
-      body: ListView.builder(
-        itemCount: widget.event.giftList.length,
-        itemBuilder: (context, index) {
-          final gift = widget.event.giftList[index];
-          return ListTile(
-            title: Text(gift.name),
-            subtitle: Text(gift.status == 'available' ? 'Available' : 'Pledged'),
-            trailing: Icon(gift.status == 'available' ? Icons.add_circle : Icons.check),
-            onTap: () {
-              // Handle tapping a gift to pledge or view details
-              _pledgeGift(context, gift);
+      appBar: AppBar(title: const Text("Gifts for Event")),
+      body: FutureBuilder<List<Gift>>(
+        future: _fetchGifts(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text("No gifts found."));
+          }
+
+          final gifts = snapshot.data!;
+          return ListView.builder(
+            itemCount: gifts.length,
+            itemBuilder: (context, index) {
+              final gift = gifts[index];
+              return ListTile(
+                title: Text(gift.name),
+                subtitle: Text(gift.description ?? "No description provided"),
+                trailing: Text("\$${gift.price.toStringAsFixed(2)}"),
+              );
             },
           );
         },
       ),
     );
   }
-
-  void _pledgeGift(BuildContext context, Gift gift) {
-    if (gift.status == 'available') {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Pledge Gift: ${gift.name}"),
-            content: Text("Do you want to pledge this gift?"),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    // Update gift status
-                    gift.status = 'pledged';
-
-                    // Add gift to pledgedGifts
-                    widget.user.pledgedGifts ??= []; // Initialize list if null
-                    widget.user.pledgedGifts!.add(gift);
-
-                    // Debug log
-                    debugPrint("Gift ${gift.name} pledged. Pledged gifts: ${widget.user.pledgedGifts!.map((g) => g.name).toList()}");
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text("Pledge"),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text("Cancel"),
-              ),
-            ],
-          );
-        },
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("${gift.name} has already been pledged!")),
-      );
-    }
-    debugPrint("GiftListPage User ID: ${widget.user.id}");
-    debugPrint("Pledged gifts in GiftListPage: ${widget.user.pledgedGifts?.map((gift) => gift.name).toList()}");
-  }
-
 }
-

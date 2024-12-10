@@ -1,9 +1,9 @@
 import 'Event.dart';
 
 class Friend {
-  final String id; // Unique identifier for the friend
+  final String id;
   final String name;
-  final List<Event> upcomingEvents; // List of events for the friend
+  final List<Event> upcomingEvents;
 
   Friend({
     required this.id,
@@ -11,6 +11,15 @@ class Friend {
     required this.upcomingEvents,
   });
 
-  // Helper method to get a count of upcoming events
-  int get upcomingEventsCount => upcomingEvents.length;
+  factory Friend.fromMap(Map<String, dynamic> friendData) {
+    String id = friendData['friendId'] as String? ?? '';
+    String name = friendData['friendName'] as String? ?? 'Unknown';
+    return Friend(
+      id: id,
+      name: name,
+      upcomingEvents: (friendData['upcomingEvents'] as List<dynamic>? ?? [])
+          .map((e) => Event.fromMap(e))
+          .toList(),
+    );
+  }
 }

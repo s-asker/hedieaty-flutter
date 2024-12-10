@@ -40,7 +40,7 @@ class _ProfilePageState extends State<ProfilePage> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  user.events.add(Event(name: _eventNameController.text, giftList: [], id: '', date: DateTime.now()));
+                  user.events.add(Event(name: _eventNameController.text, giftList: [], id: '', date: DateTime.now(), description: ''));
                 });
                 Navigator.pop(context);
               },

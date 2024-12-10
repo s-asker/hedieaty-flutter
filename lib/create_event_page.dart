@@ -17,6 +17,7 @@ class CreateEventPage extends StatefulWidget {
 class _CreateEventPageState extends State<CreateEventPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _descController = TextEditingController();
 
   List<Gift> gifts = [];
 
@@ -27,6 +28,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
       name: _nameController.text,
       date: DateTime.tryParse(_dateController.text) ?? DateTime.now(),
       giftList: gifts,
+      description: _descController.text
     );
 
     // Add the event to the user's events list

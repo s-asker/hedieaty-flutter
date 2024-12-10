@@ -1,19 +1,29 @@
 import 'Gift.dart';
 
 class Event {
-  final String id; // Unique identifier for the event
-  final String name; // Name of the event, e.g., "Birthday Party"
-  final DateTime date; // Date of the event
-  final List<Gift> giftList; // List of gifts associated with this event
+  final String id;
+  final String name;
+  final DateTime date;
+  final String description;
+  final List<Gift> giftList;
 
   Event({
     required this.id,
     required this.name,
     required this.date,
     required this.giftList,
+    required this.description
   });
 
-  // Helper method to get the status of the event based on its date
+  factory Event.fromMap(Map<String, dynamic> event) {
+    return Event(
+      id: event['id'] as String,
+      name: event['name'] as String,
+      date: DateTime.parse(event['date']),
+      description: event['description'] as String,
+      giftList: [], // Populate with fetchGifts if needed
+    );
+  }
   String get status {
     final now = DateTime.now();
     if (date.isBefore(now)) {

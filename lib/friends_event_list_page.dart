@@ -70,10 +70,7 @@ class _FriendEventListPageState extends State<FriendEventListPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => GiftListPage(
-                    event: event,
-                    user: widget.user,
-                  ), // Pass the event and user to GiftListPage
+                  builder: (context) => GiftListPage(eventId: event.id), // Pass the event and user to GiftListPage
                 ),
               );
             },

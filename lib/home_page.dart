@@ -1,15 +1,35 @@
 import 'package:flutter/material.dart';
+import 'Model/Event.dart';
 import 'Model/Friend.dart'; // Import Friend model
 import 'profile_page.dart'; // Import the ProfilePage
 import 'friends_event_list_page.dart'; // Import the FriendEventListPage
 import 'Model/User.dart'; // Import the User model
-import 'create_event_page.dart'; // Import the CreateEventPage
+import 'create_event_page.dart';
+import 'sqlite/database_helper.dart'; // Import the CreateEventPage
 
 class HomePage extends StatelessWidget {
   final List<Friend> friends;
-  final User user; // Add User to the HomePage
+  final User user;
 
   HomePage({Key? key, required this.friends, required this.user}) : super(key: key);
+
+  Future<List<Friend>> fetchFriends() async {
+    final dbHelper = DatabaseHelper();
+    // Fetch friends for the current user
+    final friendsData = await dbHelper.fetchFriends(user.id);
+
+    // Populate each friend's events
+    List<Friend> friends = [];
+    for (var friendData in friendsData) {
+      Friend friend = Friend.fromMap(friendData);
+      final eventsData = await dbHelper.fetchEvents(friend.id);
+      friend.upcomingEvents.addAll(
+        eventsData.map((eventData) => Event.fromMap(eventData)),
+      );
+      friends.add(friend);
+    }
+    return friends;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,14 +37,12 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Hedieaty"),
         actions: [
-          // Button to navigate to the Profile Page
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              debugPrint("PledgedGiftsPage User ID: ${user.id}");
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ProfilePage(user: user)), // Pass user to ProfilePage
+                MaterialPageRoute(builder: (context) => ProfilePage(user: user)),
               );
             },
           ),
@@ -32,51 +50,54 @@ class HomePage extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Display user's events
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton.icon(
+            child: ElevatedButton(
               onPressed: () {
-                // Navigate to the CreateEventPage and pass the user
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => CreateEventPage(user: user), // Pass the user object
-                  ),
+                  MaterialPageRoute(builder: (context) => CreateEventPage(user: user)),
                 );
               },
-              icon: const Icon(Icons.add),
-              label: const Text("Create Your Own Event/List"),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-              ),
+              child: const Text("Create Your Own Event/List"),
             ),
           ),
-          // List of friends
           Expanded(
-            child: ListView.builder(
-              itemCount: friends.length,
-              itemBuilder: (context, index) {
-                final friend = friends[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    // Use a placeholder image for now
-                    // backgroundImage: AssetImage('assets/images/placeholder.png'),
-                  ),
-                  title: Text(friend.name),
-                  subtitle: Text(
-                    friend.upcomingEventsCount > 0
-                        ? "Upcoming Events: ${friend.upcomingEventsCount}"
-                        : "No Upcoming Events",
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    // Navigate to Friend's Event List Page
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FriendEventListPage(friend: friend, user: user), // Pass friend object
+            child: FutureBuilder<List<Friend>>(
+              future: fetchFriends(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text("No friends found."));
+                }
+
+                final friends = snapshot.data!;
+                return ListView.builder(
+                  itemCount: friends.length,
+                  itemBuilder: (context, index) {
+                    final friend = friends[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        child: Text(friend.name[0].toUpperCase()),
                       ),
+                      title: Text(friend.name),
+                      subtitle: Text(
+                        friend.upcomingEvents.isNotEmpty
+                            ? "Upcoming Events: ${friend.upcomingEvents.length}"
+                            : "No Upcoming Events",
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                FriendEventListPage(friend: friend, user: user),
+                          ),
+                        );
+                      },
                     );
                   },
                 );
@@ -89,7 +110,7 @@ class HomePage extends StatelessWidget {
         onPressed: () {
           showModalBottomSheet(
             context: context,
-            builder: (context) => _addFriendDialog(),
+            builder: (context) => _addFriendDialog(context),
           );
         },
         child: const Icon(Icons.person_add),
@@ -97,7 +118,9 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _addFriendDialog() {
+  Widget _addFriendDialog(BuildContext context) {
+    final TextEditingController phoneController = TextEditingController();
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -109,16 +132,24 @@ class HomePage extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          const TextField(
-            decoration: InputDecoration(
+          TextField(
+            controller: phoneController,
+            decoration: const InputDecoration(
               labelText: "Phone Number",
               border: OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 10),
           ElevatedButton(
-            onPressed: () {
-              // Logic to add friend
+            onPressed: () async {
+              final dbHelper = DatabaseHelper();
+              // Add friend to database
+              await dbHelper.insertFriend({
+                'userId': user.id,
+                'friendId': phoneController.text, // Simplified
+                'friendName': 'New Friend', // Default name
+              });
+              Navigator.pop(context);
             },
             child: const Text("Add Friend"),
           ),

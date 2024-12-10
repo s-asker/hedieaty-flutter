@@ -1,146 +1,120 @@
-import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
-  static Database? _database;
-
   factory DatabaseHelper() => _instance;
-
   DatabaseHelper._internal();
+
+  Database? _database;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDatabase();
+    _database = await _initializeDatabase();
     return _database!;
   }
 
-  Future<Database> _initDatabase() async {
+  Future<Database> _initializeDatabase() async {
     String path = join(await getDatabasesPath(), 'hedieaty.db');
     return await openDatabase(
       path,
       version: 1,
-      onCreate: _onCreate,
+      onCreate: _createDatabase,
     );
   }
 
-  Future<void> _onCreate(Database db, int version) async {
-    // Create Users table
+  Future<void> _createDatabase(Database db, int version) async {
     await db.execute('''
       CREATE TABLE users (
         id TEXT PRIMARY KEY,
-        name TEXT,
+        name TEXT NOT NULL,
         email TEXT,
         preferences TEXT
-      )
+      );
     ''');
-
-    // Create Events table
     await db.execute('''
       CREATE TABLE events (
         id TEXT PRIMARY KEY,
-        name TEXT,
+        name TEXT NOT NULL,
         date TEXT,
         location TEXT,
         description TEXT,
-        userId TEXT,
+        userId TEXT NOT NULL,
         FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
-      )
+      );
     ''');
-
-    // Create Gifts table
     await db.execute('''
       CREATE TABLE gifts (
         id TEXT PRIMARY KEY,
-        name TEXT,
+        name TEXT NOT NULL,
         description TEXT,
+        status TEXT,
         category TEXT,
         price REAL,
-        status TEXT,
-        eventId TEXT,
+        eventId TEXT NOT NULL,
         FOREIGN KEY (eventId) REFERENCES events (id) ON DELETE CASCADE
-      )
+      );
     ''');
-
-    // Create Friends table
     await db.execute('''
       CREATE TABLE friends (
-        userId TEXT,
-        friendId TEXT,
-        PRIMARY KEY (userId, friendId),
+        userId TEXT NOT NULL,
+        friendId TEXT NOT NULL,
         FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE,
         FOREIGN KEY (friendId) REFERENCES users (id) ON DELETE CASCADE
-      )
+      );
     ''');
   }
 
-  // Insert User
+  // Insert Methods
   Future<void> insertUser(Map<String, dynamic> user) async {
     final db = await database;
     await db.insert('users', user, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  // Insert Event
   Future<void> insertEvent(Map<String, dynamic> event) async {
     final db = await database;
     await db.insert('events', event, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  // Insert Gift
   Future<void> insertGift(Map<String, dynamic> gift) async {
     final db = await database;
     await db.insert('gifts', gift, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  // Insert Friend
   Future<void> insertFriend(Map<String, dynamic> friend) async {
     final db = await database;
     await db.insert('friends', friend, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  // Fetch all Users
+  // Fetch Methods
   Future<List<Map<String, dynamic>>> fetchUsers() async {
     final db = await database;
     return await db.query('users');
   }
 
-  // Fetch all Events for a User
   Future<List<Map<String, dynamic>>> fetchEvents(String userId) async {
     final db = await database;
     return await db.query('events', where: 'userId = ?', whereArgs: [userId]);
   }
 
-  // Fetch all Gifts for an Event
   Future<List<Map<String, dynamic>>> fetchGifts(String eventId) async {
     final db = await database;
     return await db.query('gifts', where: 'eventId = ?', whereArgs: [eventId]);
   }
 
-  // Delete Event
-  Future<void> deleteEvent(String eventId) async {
+  Future<List<Map<String, dynamic>>> fetchFriends(String userId) async {
     final db = await database;
-    await db.delete('events', where: 'id = ?', whereArgs: [eventId]);
+    return await db.query('friends', where: 'userId = ?', whereArgs: [userId]);
   }
 
-  // Delete Gift
-  Future<void> deleteGift(String giftId) async {
+  // Helper to get friend details
+  Future<List<Map<String, dynamic>>> fetchFriendDetails(String userId) async {
     final db = await database;
-    await db.delete('gifts', where: 'id = ?', whereArgs: [giftId]);
+    return await db.rawQuery('''
+      SELECT u.* 
+      FROM users u
+      INNER JOIN friends f ON u.id = f.friendId
+      WHERE f.userId = ?;
+    ''', [userId]);
   }
-
-
-  // Delete User
-  Future<void> deleteUser(String userId) async {
-    final db = await database;
-    await db.delete('users', where: 'id = ?', whereArgs: [userId]);
-  }
-
-  // Delete Friend
-  Future<void> deleteFriend(String userId, String friendId) async {
-    final db = await database;
-    await db.delete('friends',
-        where: 'userId = ? AND friendId = ?', whereArgs: [userId, friendId]);
-  }
-
 }
