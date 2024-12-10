@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
-import 'Model/User.dart';
-import 'Model/Friend.dart';
+import 'Model/User.dart'; // Import User model
 import 'Model/Event.dart';
-import 'sqlite/database_helper.dart';
+import 'Model/Gift.dart';
 import 'home_page.dart';
+import 'sqlite/database_helper.dart'; // Import DatabaseHelper
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await initializeDatabase();
+  WidgetsFlutterBinding.ensureInitialized(); // Required for async initialization
+  await initializeDatabase(); // Call database initialization
   runApp(MyApp());
+
 }
 
 Future<void> initializeDatabase() async {
   final dbHelper = DatabaseHelper();
 
+  // Check if the database is empty
   final users = await dbHelper.fetchUsers();
+  print("Existing users: $users"); // Debugging log
   if (users.isEmpty) {
     print("No users found, inserting dummy data...");
 
@@ -26,38 +29,42 @@ Future<void> initializeDatabase() async {
       'preferences': 'Default preferences',
     });
 
-    // Add dummy events for the user
+    // Add dummy friend
+    await dbHelper.insertUser({
+      'id': '124',
+      'name': 'Jane Doe',
+      'email': 'jane@example.com',
+      'preferences': 'Default preferences',
+    });
+    await dbHelper.insertFriend({
+      'userId': '123', // The ID of the current user
+      'friendId': '124', // The ID of the friend
+    });
+    // Add events for user and friend
     await dbHelper.insertEvent({
       'id': '1',
-      'name': 'Birthday Party',
+      'name': 'John\'s Birthday Party',
       'date': DateTime.now().toIso8601String(),
       'location': 'Venue 1',
-      'description': 'A birthday celebration',
+      'description': 'John\'s celebration event',
       'userId': '123',
     });
 
-    // Add dummy friends
-    await dbHelper.insertFriend({
-      'userId': '123',
-      'friendId': '1',
-      'friendName': 'Jane Doe',
-    });
-
-    // Add friend's events
     await dbHelper.insertEvent({
       'id': '2',
-      'name': 'Anniversary',
-      'date': DateTime.now().add(Duration(days: 30)).toIso8601String(),
+      'name': 'Jane\'s Graduation Party',
+      'date': DateTime.now().toIso8601String(),
       'location': 'Venue 2',
-      'description': 'Wedding anniversary event',
-      'userId': '1',
+      'description': 'Jane\'s graduation celebration',
+      'userId': '124',
     });
 
     print("Dummy data inserted.");
   } else {
-    print("Users found: ${users.length}");
+    print("Users found: ${users.length}"); // Debugging log
   }
 }
+
 
 class MyApp extends StatelessWidget {
   @override
@@ -75,36 +82,51 @@ class MyApp extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData) {
+            print("Snapshot has no data: ${snapshot.error}");
             return const Center(child: Text("No user data found."));
           }
 
           final data = snapshot.data!;
+          print("Snapshot data: $data");
+
           final user = User.fromMap(
             data['user'],
             data['friends'],
             data['events'],
           );
 
-          return HomePage(user: user, friends: user.friends);
+          return HomePage(user: user, friends: data['friends']);
         },
       ),
     );
   }
 
+  // Fetch user with details and their friends from the user table
   Future<Map<String, dynamic>> _getUserWithDetails() async {
     final dbHelper = DatabaseHelper();
+
+    // Fetch main user
     final userList = await dbHelper.fetchUsers();
+    print("Fetched users: $userList"); // Debugging log
 
     if (userList.isEmpty) {
       throw Exception("No users found in the database.");
     }
 
     final user = userList.first;
-    final friendsList = await dbHelper.fetchFriends(user['id']);
+    print("Selected user: $user"); // Debugging log
+
+    // Fetch user's friends (other users)
+    final friendsList = await dbHelper.fetchFriendsAsUsers(user['id']); // Adjusted to fetch from users
     final eventsList = await dbHelper.fetchEvents(user['id']);
 
-    final friends = friendsList.map((friend) => Friend.fromMap(friend)).toList();
+    print("Fetched friends: $friendsList"); // Debugging log
+    print("Fetched events: $eventsList"); // Debugging log
+
+    // Convert friends and events to User and Event model objects
+    final friends = friendsList.map((friend) => User.fromMap(friend, [], [])).toList();
     final events = eventsList.map((event) => Event.fromMap(event)).toList();
+    print(friends[0].email);
 
     return {
       'user': user,
@@ -112,4 +134,5 @@ class MyApp extends StatelessWidget {
       'events': events,
     };
   }
+
 }

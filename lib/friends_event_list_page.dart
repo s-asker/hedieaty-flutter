@@ -5,10 +5,9 @@ import 'Model/User.dart';
 import 'gift_list_page.dart'; // Import the GiftListPage
 
 class FriendEventListPage extends StatefulWidget {
-  final Friend friend; // Pass the friend object
   final User user; // Pass the user object to keep track of pledged gifts
 
-  FriendEventListPage({required this.friend, required this.user});
+  FriendEventListPage({required this.user});
 
   @override
   _FriendEventListPageState createState() => _FriendEventListPageState();
@@ -21,7 +20,7 @@ class _FriendEventListPageState extends State<FriendEventListPage> {
   void initState() {
     super.initState();
     // Ensure the friend's events are initialized
-    _friendEvents = widget.friend.upcomingEvents ?? [];
+    _friendEvents = widget.user.events ?? [];
   }
 
   // Sort events by date
@@ -46,7 +45,7 @@ class _FriendEventListPageState extends State<FriendEventListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.friend.name}'s Events"),
+        title: Text("${widget.user.name}'s Events"),
         actions: [
           IconButton(
             icon: const Icon(Icons.sort),

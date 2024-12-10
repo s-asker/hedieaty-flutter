@@ -102,10 +102,56 @@ class DatabaseHelper {
     return await db.query('gifts', where: 'eventId = ?', whereArgs: [eventId]);
   }
 
-  Future<List<Map<String, dynamic>>> fetchFriends(String userId) async {
-    final db = await database;
-    return await db.query('friends', where: 'userId = ?', whereArgs: [userId]);
+  Future<List<Map<String, dynamic>>> fetchFriendsAsUsers(String userId) async {
+    final db = await database; // Assuming 'database' is your database helper
+
+    // Fetch friends of the user
+    final List<Map<String, dynamic>> friends = await db.query(
+      'friends',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    // Debug: Check the output of the friends query
+    print("Fetched friends from DB: $friends");
+
+    // If there are no friends, return an empty list
+    if (friends.isEmpty) {
+      print("No friends found.");
+      return [];
+    }
+
+    // List to hold user data
+    List<Map<String, dynamic>> friendAsUsers = [];
+
+    // Loop through each friend and query the users table for the friend data
+    for (var friend in friends) {
+      final friendId = friend['friendId'];
+      print("where is $friendId");
+      // Query the users table to fetch the friend details
+      final List<Map<String, dynamic>> user = await db.query(
+        'users',
+        where: 'id = ?',
+        whereArgs: [friendId],
+      );
+      print("users are $user");
+
+      // Add the friend data to the list
+      if (user.isNotEmpty) {
+        friendAsUsers.add(user.first);
+      }
+    }
+
+    // Debug: Check the output of the users query
+    print("Fetched users who are friends: $friendAsUsers");
+
+    return friendAsUsers;
   }
+
+
+
+
+
 
   // Helper to get friend details
   Future<List<Map<String, dynamic>>> fetchFriendDetails(String userId) async {

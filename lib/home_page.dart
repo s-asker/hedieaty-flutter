@@ -1,52 +1,20 @@
 import 'package:flutter/material.dart';
-import 'Model/Event.dart';
-import 'Model/Friend.dart'; // Import Friend model
-import 'profile_page.dart'; // Import the ProfilePage
-import 'friends_event_list_page.dart'; // Import the FriendEventListPage
-import 'Model/User.dart'; // Import the User model
+import 'Model/User.dart'; // Import User model
+import 'friends_event_list_page.dart'; // Import FriendEventListPage
 import 'create_event_page.dart';
-import 'sqlite/database_helper.dart'; // Import the CreateEventPage
+import 'sqlite/database_helper.dart'; // Import DatabaseHelper
 
 class HomePage extends StatelessWidget {
-  final List<Friend> friends;
   final User user;
+  final List<User> friends;
 
-  HomePage({Key? key, required this.friends, required this.user}) : super(key: key);
-
-  Future<List<Friend>> fetchFriends() async {
-    final dbHelper = DatabaseHelper();
-    // Fetch friends for the current user
-    final friendsData = await dbHelper.fetchFriends(user.id);
-
-    // Populate each friend's events
-    List<Friend> friends = [];
-    for (var friendData in friendsData) {
-      Friend friend = Friend.fromMap(friendData);
-      final eventsData = await dbHelper.fetchEvents(friend.id);
-      friend.upcomingEvents.addAll(
-        eventsData.map((eventData) => Event.fromMap(eventData)),
-      );
-      friends.add(friend);
-    }
-    return friends;
-  }
+  HomePage({Key? key, required this.user, required this.friends}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Hedieaty"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProfilePage(user: user)),
-              );
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -63,43 +31,21 @@ class HomePage extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<Friend>>(
-              future: fetchFriends(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text("No friends found."));
-                }
-
-                final friends = snapshot.data!;
-                return ListView.builder(
-                  itemCount: friends.length,
-                  itemBuilder: (context, index) {
-                    final friend = friends[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        child: Text(friend.name[0].toUpperCase()),
-                      ),
-                      title: Text(friend.name),
-                      subtitle: Text(
-                        friend.upcomingEvents.isNotEmpty
-                            ? "Upcoming Events: ${friend.upcomingEvents.length}"
-                            : "No Upcoming Events",
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                FriendEventListPage(friend: friend, user: user),
-                          ),
-                        );
-                      },
-                    );
-                  },
+            child: ListView.builder(
+              itemCount: friends.length,
+              itemBuilder: (context, index) {
+                final friend = friends[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    child: Text(
+                      (friend.name?.isNotEmpty ?? false)
+                          ? friend.name![0].toUpperCase()
+                          : '?', // Default to '?' if name is null or empty
+                    ),
+                  ),
+                  title: Text(
+                    friend.name ?? 'Unnamed Friend', // Provide a default value if name is null
+                  ),
                 );
               },
             ),
@@ -108,53 +54,44 @@ class HomePage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            builder: (context) => _addFriendDialog(context),
-          );
+          _addFriendDialog(context);
         },
         child: const Icon(Icons.person_add),
       ),
     );
   }
 
-  Widget _addFriendDialog(BuildContext context) {
-    final TextEditingController phoneController = TextEditingController();
+  void _addFriendDialog(BuildContext context) {
+    final TextEditingController friendIdController = TextEditingController();
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Add Friend",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: phoneController,
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Add Friend"),
+          content: TextField(
+            controller: friendIdController,
             decoration: const InputDecoration(
-              labelText: "Phone Number",
+              labelText: "Friend ID",
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () async {
-              final dbHelper = DatabaseHelper();
-              // Add friend to database
-              await dbHelper.insertFriend({
-                'userId': user.id,
-                'friendId': phoneController.text, // Simplified
-                'friendName': 'New Friend', // Default name
-              });
-              Navigator.pop(context);
-            },
-            child: const Text("Add Friend"),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                final dbHelper = DatabaseHelper();
+                // Add friend relationship
+                await dbHelper.insertFriend({
+                  'userId': user.id,
+                  'friendId': friendIdController.text,
+                });
+                Navigator.pop(context);
+              },
+              child: const Text("Add"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

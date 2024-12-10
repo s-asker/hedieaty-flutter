@@ -1,40 +1,33 @@
-import 'Gift.dart';
-import 'Friend.dart';
 import 'Event.dart';
+import 'Gift.dart';
 
 class User {
   final String id;
-  String name;
-  final String email;
-  final List<Friend> friends;
+  String? name; // Nullable
+  final String? email; // Nullable
+  final List<User> friends;
   final List<Event> events;
   List<Gift>? pledgedGifts = [];
 
   User({
     required this.id,
-    required this.name,
+    this.name,
+    this.email,
     required this.friends,
     required this.events,
-    required this.email,
   });
 
   factory User.fromMap(
       Map<String, dynamic> user,
-      List<Friend> friends,
+      List<User> friends,
       List<Event> events,
       ) {
-
-    String id = user['id'] as String? ?? '';  // Provide a fallback empty string if null
-    String name = user['name'] as String? ?? '';  // Provide a fallback empty string if null
-    String email = user['email'] as String ?? '';
     return User(
-      id: id,
-      name: name,
-      email: email,
+      id: user['id'] ?? '', // Provide fallback empty string if null
+      name: user['name'],   // Nullable, no need for a fallback
+      email: user['email'], // Nullable, no need for a fallback
       friends: friends,
       events: events,
     );
   }
-
 }
-
