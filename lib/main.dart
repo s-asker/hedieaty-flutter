@@ -38,8 +38,8 @@ Future<void> initializeDatabase() async {
     });
     await dbHelper.insertUser({
       'id': '125',
-      'name': 'Jd Doe',
-      'email': 'jane@example.com',
+      'name': 'Jason Doe',
+      'email': 'jane2@example.com',
       'preferences': 'Default preferences',
     });
     await dbHelper.insertUser({
@@ -51,6 +51,10 @@ Future<void> initializeDatabase() async {
     await dbHelper.insertFriend({
       'userId': '123', // The ID of the current user
       'friendId': '124', // The ID of the friend
+    });
+    await dbHelper.insertFriend({
+      'userId': '123', // The ID of the current user
+      'friendId': '125', // The ID of the friend
     });
     // Add events for user and friend
     await dbHelper.insertEvent({

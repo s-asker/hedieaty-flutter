@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'Model/User.dart'; // Import the User model
 import 'Model/Event.dart'; // Import the Event model
 import 'Model/Gift.dart'; // Import the Gift model
+import 'create_event_page.dart';
 import 'event_details_page.dart';
 import 'gift_details_page.dart';
 import 'my_pledged_gifts.dart'; // Import the Gift model
@@ -25,32 +26,30 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showAddEventDialog() {
-    final _eventNameController = TextEditingController();
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Add New Event"),
-          content: TextField(
-            controller: _eventNameController,
-            decoration: const InputDecoration(labelText: "Event Name"),
-          ),
+          content: const Text("Would you like to create a new event?"),
           actions: [
             TextButton(
               onPressed: () {
-                setState(() {
-                  user.events.add(Event(name: _eventNameController.text, giftList: [], id: '', date: DateTime.now(), description: ''));
-                });
-                Navigator.pop(context);
+                Navigator.pop(context); // Close the dialog
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateEventPage(user: user),
+                  ),
+                );
               },
-              child: const Text("Add"),
+              child: const Text("Yes"),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // Close the dialog
               },
-              child: const Text("Cancel"),
+              child: const Text("No"),
             ),
           ],
         );

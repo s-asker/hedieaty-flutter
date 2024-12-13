@@ -3,6 +3,7 @@ import 'Model/User.dart'; // Import User model
 import 'friends_event_list_page.dart'; // Import FriendEventListPage
 import 'create_event_page.dart';
 import 'sqlite/database_helper.dart'; // Import DatabaseHelper
+import 'profile_page.dart'; // Import ProfilePage
 
 class HomePage extends StatelessWidget {
   final User user;
@@ -15,6 +16,18 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Hedieaty"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            tooltip: "Profile",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfilePage(user: user)),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -35,6 +48,12 @@ class HomePage extends StatelessWidget {
               itemCount: friends.length,
               itemBuilder: (context, index) {
                 final friend = friends[index];
+
+                // Calculate the number of upcoming events
+                final upcomingEventsCount = friend.events
+                    .where((event) => event.date.isAfter(DateTime.now())) // Filter upcoming events
+                    .length;
+
                 return ListTile(
                   leading: CircleAvatar(
                     child: Text(
@@ -45,6 +64,9 @@ class HomePage extends StatelessWidget {
                   ),
                   title: Text(
                     friend.name ?? 'Unnamed Friend', // Provide a default value if name is null
+                  ),
+                  subtitle: Text(
+                    '$upcomingEventsCount upcoming event(s)', // Show the count of upcoming events
                   ),
                 );
               },
