@@ -15,7 +15,11 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Hedieaty"),
+        title: const Text(
+          "Hedieaty",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.teal,
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
@@ -29,58 +33,73 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CreateEventPage(user: user)),
-                );
-              },
-              child: const Text("Create Your Own Event/List"),
+      body: Container(
+        color: Colors.grey[100],
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal, // Button color
+                  foregroundColor: Colors.white, // Text color
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CreateEventPage(user: user)),
+                  );
+                },
+                child: const Text("Create Your Own Event/List"),
+              ),
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: friends.length,
-              itemBuilder: (context, index) {
-                final friend = friends[index];
+            Expanded(
+              child: ListView.builder(
+                itemCount: friends.length,
+                itemBuilder: (context, index) {
+                  final friend = friends[index];
+                  final upcomingEventsCount = friend.events
+                      .where((event) => event.date.isAfter(DateTime.now()))
+                      .length;
 
-                // Calculate the number of upcoming events
-                final upcomingEventsCount = friend.events
-                    .where((event) => event.date.isAfter(DateTime.now())) // Filter upcoming events
-                    .length;
-
-                return ListTile(
-                  leading: CircleAvatar(
-                    child: Text(
-                      (friend.name?.isNotEmpty ?? false)
-                          ? friend.name![0].toUpperCase()
-                          : '?', // Default to '?' if name is null or empty
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.teal[300],
+                        child: Text(
+                          (friend.name?.isNotEmpty ?? false)
+                              ? friend.name![0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      title: Text(
+                        friend.name ?? 'Unnamed Friend',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text('$upcomingEventsCount upcoming event(s)'),
                     ),
-                  ),
-                  title: Text(
-                    friend.name ?? 'Unnamed Friend', // Provide a default value if name is null
-                  ),
-                  subtitle: Text(
-                    '$upcomingEventsCount upcoming event(s)', // Show the count of upcoming events
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.amber,
         onPressed: () {
           _addFriendDialog(context);
         },
-        child: const Icon(Icons.person_add),
+        child: const Icon(Icons.person_add, color: Colors.white),
       ),
     );
+
   }
 
   void _addFriendDialog(BuildContext context) {

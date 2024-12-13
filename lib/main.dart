@@ -4,10 +4,15 @@ import 'Model/Event.dart';
 import 'Model/Gift.dart';
 import 'home_page.dart';
 import 'sqlite/database_helper.dart'; // Import DatabaseHelper
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Required for async initialization
   await initializeDatabase(); // Call database initialization
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyApp());
 
 }
@@ -57,21 +62,23 @@ Future<void> initializeDatabase() async {
       'friendId': '125', // The ID of the friend
     });
     // Add events for user and friend
+
     await dbHelper.insertEvent({
       'id': '1',
-      'name': 'John\'s Birthday Party',
-      'date': DateTime.now().toIso8601String(),
-      'location': 'Venue 1',
-      'description': 'John\'s celebration event',
-      'userId': '124',
-    });
-    await dbHelper.insertEvent({
-      'id': '1',
-      'name': 'John\'s Birthday Party',
+      'name': 'My Birthday Party',
       'date': DateTime.now().toIso8601String(),
       'location': 'Venue 1',
       'description': 'John\'s celebration event',
       'userId': '123',
+    });
+    await dbHelper.insertGift({
+      'id': '1',
+      'name': 'Mobile phone',
+      'description': 'iPhone 12 Pro',
+      'status': 'available',
+      'category': 'Electronics',
+      'price': '15000',
+      'eventId': '1',
     });
 
     await dbHelper.insertEvent({

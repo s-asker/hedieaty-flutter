@@ -32,6 +32,9 @@ dependencies:
     sdk: flutter
   sqflite:
   path:
+  firebase_core:
+  firebase_auth:
+  cloud_firestore:
 
 
 

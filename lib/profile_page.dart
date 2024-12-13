@@ -68,15 +68,23 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${user.name}'s Profile"),
+        title: Text(
+          "${user.name}'s Profile",
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.teal,
       ),
-      body: Padding(
+      body: Container(
+        color: Colors.grey[100],
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             ListTile(
-              leading: const Icon(Icons.person),
-              title: Text("Name: ${user.name}"),
+              leading: const Icon(Icons.person, color: Colors.teal),
+              title: Text(
+                "Name: ${user.name}",
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
               subtitle: const Text("Tap to edit your name"),
               onTap: () {
                 _showEditProfileDialog();
@@ -85,7 +93,7 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 20),
             const Text(
               "Your Created Events",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal),
             ),
             const SizedBox(height: 10),
             Expanded(
@@ -93,32 +101,37 @@ class _ProfilePageState extends State<ProfilePage> {
                 itemCount: user.events.length,
                 itemBuilder: (context, index) {
                   final event = user.events[index];
-                  return ListTile(
-                    title: Text(event.name),
-                    subtitle: Text("Gifts: ${event.giftList.length}"),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Navigate to EventDetailsPage
-                        IconButton(
-                          icon: const Icon(Icons.chevron_right),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EventDetailsPage(event: event),
-                              ),
-                            );
-                          },
-                        ),
-                        // Remove Event Button
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            _removeEvent(index); // Remove event at the index
-                          },
-                        ),
-                      ],
+                  return Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: ListTile(
+                      title: Text(
+                        event.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text("Gifts: ${event.giftList.length}"),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.chevron_right, color: Colors.teal),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EventDetailsPage(event: event),
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              _removeEvent(index);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -126,6 +139,13 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               onPressed: _showAddEventDialog,
               child: const Text("Add Event"),
             ),
@@ -133,6 +153,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
     );
+
   }
 
   void _showEditProfileDialog() {
