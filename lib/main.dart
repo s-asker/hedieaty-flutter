@@ -59,7 +59,7 @@ Future<void> initializeDatabase() async {
       'date': DateTime.now().toIso8601String(),
       'location': 'Venue 1',
       'description': 'John\'s celebration event',
-      'userId': '123',
+      'userId': '124',
     });
     await dbHelper.insertEvent({
       'id': '1',
